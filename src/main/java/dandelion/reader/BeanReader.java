@@ -8,10 +8,10 @@ import org.springframework.core.io.Resource;
 import dandelion.ConvertException;
 
 public abstract class BeanReader {
-  protected Resource resource;
+  protected Resource[] resources;
   
-  public BeanReader(Resource resource) {
-    this.resource = resource;
+  public BeanReader(Resource... resources) {
+    this.resources = resources;
   }
   
   public abstract void read() throws ConvertException ;

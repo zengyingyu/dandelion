@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -21,21 +22,33 @@ public class ExcelParser {
   private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");  //日期格式化    
   
   public List<ExcelSheet> read(InputStream in,String fileName)throws IOException {    
-      List<ExcelSheet> list = new ArrayList<>(); 
-      
       Workbook work = null;
       try {
-        work = getWorkbook(in,fileName);
-        for (int i = 0; i < work.getNumberOfSheets(); i++) {
-            list.add(read(work.getSheetAt(i)));
+        int index = fileName.lastIndexOf('.');
+        String packageName = fileName.substring(0, index);
+        String fileType = fileName.substring(index);
+        if(EXCEL2003L.equals(fileType)){    
+           work =  new HSSFWorkbook(in);  //2003-    
+        }else if(EXCEL2007U.equals(fileType)){    
+          work = new XSSFWorkbook(in);  //2007+    
+        }else{    
+            return Collections.emptyList();
         }
+        
+        List<ExcelSheet> list = new ArrayList<>(); 
+        for (int i = 0; i < work.getNumberOfSheets(); i++) {
+          ExcelSheet sheet = read(work.getSheetAt(i));
+          sheet.setName(packageName+"."+sheet.getName());
+          list.add(sheet);
+        }
+        return list;
       }finally {
         try {
           if(work!=null)
             work.close();
         } catch (IOException e) {}
       }
-      return list;
+      
   }
   
   ExcelSheet read(Sheet sheet) {
@@ -61,24 +74,6 @@ public class ExcelParser {
     return cells;
   }
   
-      
-  /**  
-   * 描述：根据文件后缀，自适应上传文件的版本   
-   * @param inStr,fileName  
-   * @return  
-   * @throws IOException 
-   * @throws Exception  
-   */    
-   Workbook getWorkbook(InputStream inStr,String fileName) throws IOException{
-      String fileType = fileName.substring(fileName.lastIndexOf('.'));
-      if(EXCEL2003L.equals(fileType)){    
-         return new HSSFWorkbook(inStr);  //2003-    
-      }else if(EXCEL2007U.equals(fileType)){    
-        return new XSSFWorkbook(inStr);  //2007+    
-      }else{    
-          return null;
-      }
-  }    
   
   /**  
    * 描述：对表格中数值进行格式化  

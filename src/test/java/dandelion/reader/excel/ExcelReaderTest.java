@@ -18,7 +18,7 @@ import dandelion.Teacher;
 public class ExcelReaderTest {
   @Test
   public void testReadStringClassOfT() throws ParseException, ConvertException {
-    ExcelReader reader = new ExcelReader(new ClassPathResource("testdata.xlsx"));
+    ExcelReader reader = new ExcelReader(new ClassPathResource("dandelion.xlsx"));
     reader.read();
     reader.getBeans();
     

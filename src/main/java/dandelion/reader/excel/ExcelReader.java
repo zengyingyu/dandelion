@@ -34,6 +34,23 @@ public class ExcelReader extends BeanReader{
   private PrimitiveConverter primitiveConverter = new PrimitiveConverter();
   
   public void read() throws ConvertException {
+    try {
+      for(Resource resource:resources) {
+        read(resource);
+      }
+      //处理未解析的对象引用
+      CustomObjectConverter customerObjectConverter = new CustomObjectConverter(beanMap);
+      for(NonResolveBeanRef ref:beans) {
+        BeanRef bean = ref.getBean();
+        Method method = ref.getMethod();
+        method.invoke(bean.getBean(), customerObjectConverter.convert(method.getGenericParameterTypes()[0], ref.getFieldValue()));
+      }
+    }catch(Exception e) {
+      throw new ConvertException(e.getMessage(), e);
+    }
+  }
+  
+  private void read(Resource resource) throws ConvertException {
     try(
         InputStream inputStream = resource.getInputStream();
     ) {
@@ -41,14 +58,6 @@ public class ExcelReader extends BeanReader{
       List<ExcelSheet> sheets = new ExcelParser().read(inputStream, resource.getFilename());
       for(ExcelSheet sheet:sheets) {
         beanMap.put(sheet.getName(), convert(sheet));
-      }
-      
-      //处理未解析的对象引用
-      CustomObjectConverter customerObjectConverter = new CustomObjectConverter(beanMap);
-      for(NonResolveBeanRef ref:beans) {
-        BeanRef bean = ref.getBean();
-        Method method = ref.getMethod();
-        method.invoke(bean.getBean(), customerObjectConverter.convert(method.getGenericParameterTypes()[0], ref.getFieldValue()));
       }
     }catch(Exception e) {
       throw new ConvertException(e.getMessage(), e);
